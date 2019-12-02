@@ -6,4 +6,4 @@
 | Johnny | Ruby | https://github.com/jdongelmans/aoc2019
 | Michel de Nijs | C# | https://github.com/micheldn/AdventOfCode2019 |
 | RobertD | Python | https://github.com/RobertDiep/adventofcode2019 |
-| Tim Oerlemans | html | https://github.com/timoerlemans/adventofcode_2019 |
+| Tim Oerlemans | JavaScript | https://github.com/timoerlemans/adventofcode_2019 |
