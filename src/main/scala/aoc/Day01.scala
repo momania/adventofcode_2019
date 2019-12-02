@@ -6,12 +6,12 @@ import scala.io.Source
 object Day01 extends App {
 
   val source = Source.fromFile("input/day01.input")
-  val lines = source.getLines().toList
+  val lines = source.getLines().map(_.toInt).toList
 
-  val totalFuel = lines.foldLeft(0){ case (total, mass) => total + computeFuel(mass.toInt)}
+  val totalFuel = lines.foldLeft(0)(_ + computeFuel(_))
   println(s"Total fuel: $totalFuel")
 
-  val totalFuelPlus = lines.foldLeft(0){ case (total, mass) => total + computeFuelPlus(mass.toInt)}
+  val totalFuelPlus = lines.foldLeft(0)(_ + computeFuelPlus(_))
   println(s"Total fuel plus: $totalFuelPlus")
 
   @tailrec def computeFuelPlus(mass: Int, computed: Int = 0): Int = {
