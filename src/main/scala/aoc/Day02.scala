@@ -36,5 +36,4 @@ object Day02 extends App {
   for ((noun, verb) <- combinations.find { case (noun, verb) => intComputer(noun, verb) == 19690720}) {
     println(s"Combination: $noun/$verb - Code: ${(100 * noun) + verb}")
   }
-
 }
