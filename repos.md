@@ -1,5 +1,6 @@
 | Wie | Taal | Waar |
 |---|---|---|
+| Bart de Water | Ruby | https://github.com/bdewater/adventofcode/tree/master/2019 |
 | Irmo Manie | Scala | https://github.com/momania/adventofcode_2019 |
 | Jens de Rond | Python| https://github.com/Jensderond/aoc2019 |  
 | Johnny | Ruby | https://github.com/jdongelmans/aoc2019
