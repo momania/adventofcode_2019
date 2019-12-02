@@ -10,27 +10,30 @@ object Day02 extends App {
 
   @tailrec def runOpCode(index: Int, code: List[Int]): List[Int] = {
    code.slice(index, index + 4) match {
-     case 1 :: x :: y :: z :: Nil =>
-       val updatedCode = code.updated(z, code(x) + code(y))
-       runOpCode(index + 4, updatedCode)
-     case 2 :: x :: y :: z :: Nil =>
-       val updatedCode = code.updated(z, code(x) * code(y))
-       runOpCode(index + 4, updatedCode)
      case 99 :: _ => code
-     case other =>
-       sys.error(s"Unknown input: $other")
+     case instr :: x :: y :: z :: Nil =>
+       val update = instr match {
+         case 1 => code(x) + code(y)
+         case 2 => code(x) * code(y)
+       }
+       val updatedCode = code.updated(z, update)
+       runOpCode(index + 4, updatedCode)
    }
   }
 
-  def intComputer(code: List[Int], x: Int, y: Int): Int = {
+  def intComputer(x: Int, y: Int, code: List[Int] = sourceCode): Int = {
     runOpCode(0, code.updated(1, x).updated(2, y)).head
   }
 
-  println(s"Code: ${intComputer(sourceCode, 12, 2)}")
+  println(s"Code: ${intComputer(12, 2)}")
 
 
-  val combinations = (0 to 99).flatMap { n => (0 to 99).map { v => (n,v ) } }
-  for ((noun, verb) <- combinations.find { case (noun, verb) => intComputer(sourceCode, noun, verb) == 19690720}) {
+  val combinations = for {
+    noun <- 0 to 99
+    verb <- 0 to 99
+  } yield (noun, verb)
+
+  for ((noun, verb) <- combinations.find { case (noun, verb) => intComputer(noun, verb) == 19690720}) {
     println(s"Combination: $noun/$verb - Code: ${(100 * noun) + verb}")
   }
 
