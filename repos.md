@@ -8,3 +8,4 @@
 | RobertD | Python | https://github.com/RobertDiep/adventofcode2019 |
 | Tim Oerlemans | JavaScript | https://github.com/timoerlemans/adventofcode_2019 |
 | Bas Langenberg | Go | https://github.com/BasLangenberg/aoc2019 |
+| Bernard Kroes | Ruby | https://github.com/bernardkroes/advent_of_code_2019 |
