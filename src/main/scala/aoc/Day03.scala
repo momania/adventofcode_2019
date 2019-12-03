@@ -51,4 +51,11 @@ object Day03 extends App {
 
   val distances = intersections.map{ pos => math.abs(pos._1) + math.abs(pos._2)}
   println(s"Closest: ${distances.min}")
+
+  val steps = intersections.map { intersection =>
+    val stepsOne = pathOne.takeWhile(_ != intersection) :+ intersection
+    val stepsTwo = pathTwo.takeWhile(_ != intersection) :+ intersection
+    stepsOne.size + stepsTwo.size
+  }
+  println(s"Minimal steps: ${steps.min}")
 }
