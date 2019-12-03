@@ -45,8 +45,8 @@ object Day03 extends App {
     wire match {
       case Nil => path
       case instruction :: rest =>
-        val (direcion , steps) = instruction.splitAt(1)
-        val positions = collectCoordinates(currentPosition, direcion, steps.toInt)
+        val (direction , steps) = instruction.splitAt(1)
+        val positions = collectCoordinates(currentPosition, direction, steps.toInt)
         followWire(rest, positions.last, path ::: positions)
     }
   }
