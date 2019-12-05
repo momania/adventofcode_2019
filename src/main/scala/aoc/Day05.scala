@@ -37,12 +37,6 @@ object Day05 extends App {
     instruction match {
       case Instruction(99, _) =>
         output
-      case Instruction(3, _) =>
-        val position = getImmedateValueAt(index + 1)
-        runOpCode(input, index + 2, code.updated(position, input), output)
-      case Instruction(4, modes) =>
-        val out = getValue(index + 1, modes.headOption)
-        runOpCode(input, index + 2, code, output :+ out)
       case Instruction(1, modes) =>
         val x = getValue(index + 1, modes.headOption)
         val y = getValue(index + 2, modes.drop(1).headOption)
@@ -53,12 +47,42 @@ object Day05 extends App {
         val y = getValue(index + 2, modes.drop(1).headOption)
         val updatedCode = code.updated(getImmedateValueAt(index + 3), x * y)
         runOpCode(input, index + 4, updatedCode, output)
+      case Instruction(3, _) =>
+        val position = getImmedateValueAt(index + 1)
+        runOpCode(input, index + 2, code.updated(position, input), output)
+      case Instruction(4, modes) =>
+        val out = getValue(index + 1, modes.headOption)
+        runOpCode(input, index + 2, code, output :+ out)
+      case Instruction(5, modes) =>
+        val param = getValue(index + 1, modes.headOption)
+        val nextIndex = if (param != 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
+        runOpCode(input, nextIndex, code, output)
+      case Instruction(6, modes) =>
+        val param = getValue(index + 1, modes.headOption)
+        val nextIndex = if (param == 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
+        runOpCode(input, nextIndex, code, output)
+      case Instruction(7, modes) =>
+        val x = getValue(index + 1, modes.headOption)
+        val y = getValue(index + 2, modes.drop(1).headOption)
+        val store = if (x < y) 1 else 0
+        val updatedCode = code.updated(getImmedateValueAt(index + 3), store)
+        runOpCode(input, index + 4, updatedCode, output)
+      case Instruction(8, modes) =>
+        val x = getValue(index + 1, modes.headOption)
+        val y = getValue(index + 2, modes.drop(1).headOption)
+        val store = if (x == y) 1 else 0
+        val updatedCode = code.updated(getImmedateValueAt(index + 3), store)
+        runOpCode(input, index + 4, updatedCode, output)
     }
   }
 
   def intComputer(input: Int, code: List[Int] = sourceCode) = {
     runOpCode(input, 0, code, Nil)
   }
+
+  val sampleInput = List(3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99)
+  val sampleOutput = intComputer(9, sampleInput)
+  println(s"Sample output: $sampleOutput")
 
   val output = intComputer(1)
   println(s"Output: $output")
