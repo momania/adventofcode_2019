@@ -27,15 +27,14 @@ object Day05 extends App {
       if (mode.contains(1)) getImmediateValueAt(i) else getPositionValueAt(i)
     }
 
+    def getParameter(i: Int) = getValue(index + 1 + i, modes.drop(i).headOption)
+
     def xyOperation(op: (Int, Int) => Int): List[Int] = {
-      val x = getValue(index + 1, modes.headOption)
-      val y = getValue(index + 2, modes.drop(1).headOption)
-      code.updated(getImmediateValueAt(index + 3), op(x, y))
+      code.updated(getImmediateValueAt(index + 3), op(getParameter(0), getParameter(0)))
     }
 
     def nextIndexOperation(op: Int => Boolean) = {
-      val param = getValue(index + 1, modes.headOption)
-      if (op(param)) getValue(index + 2, modes.drop(1).headOption) else index + 3
+      if (op(getParameter(0))) getParameter(1) else index + 3
     }
 
     instruction match {
@@ -43,7 +42,7 @@ object Day05 extends App {
       case 1 => runOpCode(input, index + 4, xyOperation(_ + _), output)
       case 2 => runOpCode(input, index + 4, xyOperation(_ * _), output)
       case 3 => runOpCode(input, index + 2, code.updated(getImmediateValueAt(index + 1), input), output)
-      case 4 => runOpCode(input, index + 2, code, output :+ getValue(index + 1, modes.headOption))
+      case 4 => runOpCode(input, index + 2, code, output :+ getParameter(0))
       case 5 => runOpCode(input, nextIndexOperation(_ != 0), code, output)
       case 6 => runOpCode(input, nextIndexOperation(_ == 0), code, output)
       case 7 => runOpCode(input, index + 4, xyOperation(_ < _), output)
