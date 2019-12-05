@@ -43,6 +43,11 @@ object Day05 extends App {
       code.updated(getImmedateValueAt(index + 3), op(x, y))
     }
 
+    def nextIndexOperation(modes: List[Int]) = {
+      val param = getValue(index + 1, modes.headOption)
+      if (param != 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
+    }
+
     instruction match {
       case Instruction(99, _) =>
         output
@@ -59,12 +64,10 @@ object Day05 extends App {
         val out = getValue(index + 1, modes.headOption)
         runOpCode(input, index + 2, code, output :+ out)
       case Instruction(5, modes) =>
-        val param = getValue(index + 1, modes.headOption)
-        val nextIndex = if (param != 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
+        val nextIndex = nextIndexOperation(modes)
         runOpCode(input, nextIndex, code, output)
       case Instruction(6, modes) =>
-        val param = getValue(index + 1, modes.headOption)
-        val nextIndex = if (param == 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
+        val nextIndex = nextIndexOperation(modes)
         runOpCode(input, nextIndex, code, output)
       case Instruction(7, modes) =>
         val updatedCode = xyOperation(modes, (x, y) => x < y)
