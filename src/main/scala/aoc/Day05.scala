@@ -22,6 +22,9 @@ object Day05 extends App {
       }
     }
   }
+
+  implicit def boolToInt(bool: Boolean) = if (bool) 1 else 0
+
   @tailrec def runOpCode(input: Int, index: Int, code: List[Int], output: List[Int]): List[Int] = {
 
     @inline def getPositionValueAt(i: Int) = code(code(i))
@@ -34,18 +37,20 @@ object Day05 extends App {
     val instruction = Instruction(code(index))
     println(s"Index: $index - instruction: $instruction")
 
+    def xyOperation(modes: List[Int], op: (Int, Int) => Int): List[Int] = {
+      val x = getValue(index + 1, modes.headOption)
+      val y = getValue(index + 2, modes.drop(1).headOption)
+      code.updated(getImmedateValueAt(index + 3), op(x, y))
+    }
+
     instruction match {
       case Instruction(99, _) =>
         output
       case Instruction(1, modes) =>
-        val x = getValue(index + 1, modes.headOption)
-        val y = getValue(index + 2, modes.drop(1).headOption)
-        val updatedCode = code.updated(getImmedateValueAt(index + 3), x + y)
+        val updatedCode = xyOperation(modes, (x, y) => x + y)
         runOpCode(input, index + 4, updatedCode, output)
       case Instruction(2, modes) =>
-        val x = getValue(index + 1, modes.headOption)
-        val y = getValue(index + 2, modes.drop(1).headOption)
-        val updatedCode = code.updated(getImmedateValueAt(index + 3), x * y)
+        val updatedCode = xyOperation(modes, (x, y) => x * y)
         runOpCode(input, index + 4, updatedCode, output)
       case Instruction(3, _) =>
         val position = getImmedateValueAt(index + 1)
@@ -62,16 +67,10 @@ object Day05 extends App {
         val nextIndex = if (param == 0) getValue(index + 2, modes.drop(1).headOption) else index + 3
         runOpCode(input, nextIndex, code, output)
       case Instruction(7, modes) =>
-        val x = getValue(index + 1, modes.headOption)
-        val y = getValue(index + 2, modes.drop(1).headOption)
-        val store = if (x < y) 1 else 0
-        val updatedCode = code.updated(getImmedateValueAt(index + 3), store)
+        val updatedCode = xyOperation(modes, (x, y) => x < y)
         runOpCode(input, index + 4, updatedCode, output)
       case Instruction(8, modes) =>
-        val x = getValue(index + 1, modes.headOption)
-        val y = getValue(index + 2, modes.drop(1).headOption)
-        val store = if (x == y) 1 else 0
-        val updatedCode = code.updated(getImmedateValueAt(index + 3), store)
+        val updatedCode = xyOperation(modes, (x, y) => x == y)
         runOpCode(input, index + 4, updatedCode, output)
     }
   }
