@@ -8,73 +8,61 @@ object Day05 extends App {
   val source = Source.fromFile("input/day05.input")
   val sourceCode = source.getLines().mkString.split(',').map(_.toInt).toList
 
-  def runOpCode(input: Int, index: Int, code: List[Int]): List[Int] = {
-    println(s"Index: $index")
-    // mode 1 is immediate
-    val instruction = code(index).toString
-    println(s"Instruction: $instruction")
-    instruction.toList match {
-      case '9' :: '9' :: Nil => // halt
-        println("HALT")
-      case modeY :: modeX :: '0' :: '1' :: Nil =>
-        val x = if(modeX == '1') code(index + 1) else code(code(index + 1))
-        val y = if(modeY == '1') code(index + 2) else code(code(index + 2))
-        println(s"Sum values, using modeX $modeX and modeY $modeY - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), x + y)
-        runOpCode(input, index + 4, updatedCode)
-      case modeX :: '0' :: '1' :: Nil =>
-        val x = if(modeX == '1') code(index + 1) else code(code(index + 1))
-        val y = code(code(index + 2))
-        println(s"Sum values, using modeX $modeX only - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), x + y)
-        runOpCode(input, index + 4, updatedCode)
-      case '1' :: Nil =>
-        val x = code(code(index + 1))
-        val y = code(code(index + 2))
-        println(s"Sum values - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), code(code(index + 1)) + code(code(index + 2)))
-        runOpCode(input, index + 4, updatedCode)
-      case modeY :: modeX :: '0' :: '2' :: Nil =>
-        val x = if(modeX == '1') code(index + 1) else code(code(index + 1))
-        val y = if(modeY == '1') code(index + 2) else code(code(index + 2))
-        println(s"Multiply values, using modeX $modeX and modeY $modeY - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), x * y)
-        runOpCode(input, index + 4, updatedCode)
-      case modeX :: '0' :: '2' :: Nil =>
-        val x = if(modeX == '1') code(index + 1) else code(code(index + 1))
-        val y = code(code(index + 2))
-        println(s"Multiply values, using modeX $modeX only - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), x * y)
-        runOpCode(input, index + 4, updatedCode)
-      case '2' :: Nil =>
-        val x = code(code(index + 1))
-        val y = code(code(index + 2))
-        println(s"Multiply values - x: $x - y: $y and store at ${code(index + 3)}")
-        val updatedCode = code.updated(code(index + 3), x * y)
-        runOpCode(input, index + 4, updatedCode)
-      case mode :: '0' :: '3' :: Nil =>
-      case '3' :: Nil =>
-        println(s"Put input at ${code(index + 1)}")
-        runOpCode(input, index + 2, code.updated(code(index + 1), input))
-      case mode :: '0' :: '4' :: Nil =>
-        val output = if(mode == '1') code(index + 1) else code(code(index + 1))
-        println(s"OUTPUT mode $mode: $output")
-        runOpCode(input, index + 2, code)
-      case '4' :: Nil =>
-        println(s"OUTPUT: ${code(code(index + 1))}")
-        runOpCode(input, index + 2, code)
+  case class Instruction(operation: Int, modes: List[Int])
+  object Instruction {
+    def apply(code: Int): Instruction = {
+      if (code < 99) {
+        Instruction(code, Nil)
+      }
+      else {
+        val strCode = code.toString
+        // char to String first, then to Int, otherwise we get the character code instead of value
+        val modes = strCode.dropRight(2).toList.map(_.toString.toInt).reverse
+        Instruction(strCode.takeRight(2).toInt, modes)
+      }
+    }
+  }
+  @tailrec def runOpCode(input: Int, index: Int, code: List[Int], output: List[Int]): List[Int] = {
+
+    @inline def getPositionValueAt(i: Int) = code(code(i))
+    @inline def getImmedateValueAt(i: Int) = code(i)
+    @inline def getValue(i: Int, mode: Option[Int]) = mode.getOrElse(0) match {
+      case 0 => getPositionValueAt(i)
+      case 1 => getImmedateValueAt(i)
     }
 
-    List.empty
+    val instruction = Instruction(code(index))
+    println(s"Index: $index - instruction: $instruction")
+
+    instruction match {
+      case Instruction(99, _) =>
+        output
+      case Instruction(3, _) =>
+        val position = getImmedateValueAt(index + 1)
+        runOpCode(input, index + 2, code.updated(position, input), output)
+      case Instruction(4, modes) =>
+        val out = getValue(index + 1, modes.headOption)
+        runOpCode(input, index + 2, code, output :+ out)
+      case Instruction(1, modes) =>
+        val x = getValue(index + 1, modes.headOption)
+        val y = getValue(index + 2, modes.drop(1).headOption)
+        val updatedCode = code.updated(getImmedateValueAt(index + 3), x + y)
+        runOpCode(input, index + 4, updatedCode, output)
+      case Instruction(2, modes) =>
+        val x = getValue(index + 1, modes.headOption)
+        val y = getValue(index + 2, modes.drop(1).headOption)
+        val updatedCode = code.updated(getImmedateValueAt(index + 3), x * y)
+        runOpCode(input, index + 4, updatedCode, output)
+    }
   }
 
-  def intComputer(input: Int, code: List[Int] = sourceCode) {
-    runOpCode(input, 0, code)
+  def intComputer(input: Int, code: List[Int] = sourceCode) = {
+    runOpCode(input, 0, code, Nil)
   }
 
-  intComputer(1)
+  val output = intComputer(1)
+  println(s"Output: $output")
 
-
-
-
+  val outputTwo = intComputer(5)
+  println(s"Output two: $outputTwo")
 }
