@@ -21,16 +21,16 @@ object Day05 extends App {
     val (instruction, modes) = extractInstructionAndModes(code(index))
     println(s"Index: $index - instruction: $instruction")
 
-    @inline def getPositionValueAt(i: Int) = code(code(i))
-    @inline def getImmedateValueAt(i: Int) = code(i)
+    @inline def getImmediateValueAt(i: Int) = code(i)
+    @inline def getPositionValueAt(i: Int) = getImmediateValueAt(code(i))
     @inline def getValue(i: Int, mode: Option[Int]) = {
-      if (mode.contains(1)) getImmedateValueAt(i) else getPositionValueAt(i)
+      if (mode.contains(1)) getImmediateValueAt(i) else getPositionValueAt(i)
     }
 
     def xyOperation(op: (Int, Int) => Int): List[Int] = {
       val x = getValue(index + 1, modes.headOption)
       val y = getValue(index + 2, modes.drop(1).headOption)
-      code.updated(getImmedateValueAt(index + 3), op(x, y))
+      code.updated(getImmediateValueAt(index + 3), op(x, y))
     }
 
     def nextIndexOperation(op: Int => Boolean) = {
@@ -42,7 +42,7 @@ object Day05 extends App {
       case 99 => output
       case 1 => runOpCode(input, index + 4, xyOperation(_ + _), output)
       case 2 => runOpCode(input, index + 4, xyOperation(_ * _), output)
-      case 3 => runOpCode(input, index + 2, code.updated(getImmedateValueAt(index + 1), input), output)
+      case 3 => runOpCode(input, index + 2, code.updated(getImmediateValueAt(index + 1), input), output)
       case 4 => runOpCode(input, index + 2, code, output :+ getValue(index + 1, modes.headOption))
       case 5 => runOpCode(input, nextIndexOperation(_ != 0), code, output)
       case 6 => runOpCode(input, nextIndexOperation(_ == 0), code, output)
