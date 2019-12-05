@@ -27,13 +27,13 @@ object Day05 extends App {
       if (mode.contains(1)) getImmediateValueAt(i) else getPositionValueAt(i)
     }
 
-    def getParameter(i: Int) = getValue(index + 1 + i, modes.drop(i).headOption)
+    @inline def getParameter(i: Int) = getValue(index + 1 + i, modes.drop(i).headOption)
 
-    def xyOperation(op: (Int, Int) => Int): List[Int] = {
-      code.updated(getImmediateValueAt(index + 3), op(getParameter(0), getParameter(0)))
+    @inline def xyOperation(op: (Int, Int) => Int): List[Int] = {
+      code.updated(getImmediateValueAt(index + 3), op(getParameter(0), getParameter(1)))
     }
 
-    def nextIndexOperation(op: Int => Boolean) = {
+    @inline def nextIndexOperation(op: Int => Boolean) = {
       if (op(getParameter(0))) getParameter(1) else index + 3
     }
 
