@@ -24,9 +24,9 @@ object Day06 extends App {
     val tree = root.copy(orbitedBy = root.orbitedBy.map(ob => {buildTree(ob, others)}))
 
     def countOrbits(oo: OrbitalObject, dept: Int): Int = {
-      val direct = if (dept > 0) 1 else 0
+      val direct = math.min(dept, 1)
       val indirect = if (dept > 1) (dept - 1) else 0
-      val nested = if (oo.orbitedBy.isEmpty) { 0 } else oo.orbitedBy.map(ob => countOrbits(ob, dept + 1)).sum
+      val nested = oo.orbitedBy.map(ob => countOrbits(ob, dept + 1)).sum
       indirect + direct + nested
     }
 
