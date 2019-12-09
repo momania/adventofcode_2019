@@ -2,3 +2,4 @@ target
 workspace.xml
 project/boot
 .idea
+*.jpg

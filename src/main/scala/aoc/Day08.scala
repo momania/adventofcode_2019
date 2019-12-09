@@ -29,7 +29,7 @@ object Day08 extends App {
 
 
   val stackedLayers = List.fill(imageX * imageY)(-1)
-  val layeredImage = layers.foldLeft(stackedLayers){ case(stack, layer) =>
+  val layeredImage = layers.reverse.foldLeft(stackedLayers){ case(stack, layer) =>
     stack.zip(layer).map { case(s, l) => if (l < 2) l else math.min(s, l)}
   }
 
