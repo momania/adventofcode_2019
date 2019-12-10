@@ -1,5 +1,6 @@
 package aoc
 
+import scala.annotation.tailrec
 import scala.io.Source
 
 object Day10 extends App {3
@@ -22,7 +23,8 @@ object Day10 extends App {3
 
   case class Coordinate(x: Int, y: Int)
   case class Location(coordinate: Coordinate, hasAstroid: Boolean)
-  case class Path(a: Double, b: Double, direction: Int, path: Seq[Coordinate])
+  case class PathParameters(a: Double, b: Double, direction: Int, angle: Double)
+  case class Path(pathParameters: PathParameters, target: Coordinate, distance: Double)
 
   val grid = sourceCode.zipWithIndex.flatMap { case (line, y) =>
     line.zipWithIndex.map { case (pos, x) => Location(Coordinate(x, y), (pos == '#')) }
@@ -37,42 +39,62 @@ object Day10 extends App {3
   println(s"Locations with numbers: $locationsWithNumbers")
   println(s"Location with most in sight: ${bestPoint}")
 
-  def numberOfAstroidsInView(coordinate: Coordinate, astroidLocations: List[Location]): Int = {
-    val allMinusSelf = astroidLocations.filterNot(_.coordinate == coordinate)
 
-    val allPaths = allMinusSelf.map {l => calculatePath(coordinate, l.coordinate)}
-    allPaths.map { p => (p.a, p.b, p.direction) }.distinct.size // just compute distinct directional paths
-  }
+  val pathsForBestPoint = pathsForCoordinate(bestPoint._1.coordinate, astroidLocations)
+  println(s"Paths for best: $pathsForBestPoint")
+  val grouped = pathsForBestPoint.groupBy(_.pathParameters).toList
 
-  def filterEdges(coordinate: Coordinate): Seq[Coordinate] = {
-    println(s"Filtering coordinate $coordinate")
-    if (allEdges.contains(coordinate)) {
-      val filteredSelf = allEdges.filterNot(_ == coordinate)
-      val filteredVerticals = filteredSelf.filterNot(edge => edge.x == coordinate.x && edge.y != 0 && edge.y != height -1)
-      filteredVerticals.filterNot(edge => edge.y == coordinate.y && edge.x != 0 && edge.x != width -1)
+  println(s"G: $grouped")
+  val sorted = grouped.sortBy(_._1.angle).reverse
+  println(s"Sorted: ${sorted}")
+
+
+  val sortedPaths = sorted.map(_._2.sortBy(_.distance))
+
+  @tailrec def collectPaths(sortedPaths: List[List[Path]], collected: List[Path]): List[Path] = {
+    val scraped = sortedPaths.map{_.head}
+    val rest = sortedPaths.map(_.tail).filterNot(_.isEmpty)
+    if (rest.isEmpty) {
+      collected ::: scraped
     } else {
-      allEdges
+      collectPaths(rest, collected ::: scraped)
     }
   }
 
+  val flattenedPaths = collectPaths(sortedPaths, Nil)
+  val indexedPAths: List[(Path, Int)] = flattenedPaths.zipWithIndex
+
+  for (elem <- indexedPAths.find(_._2 == 199).map(_._1)) {
+    val bla = (elem.target.x * 100) + elem.target.y
+    println(s"Ouput: $bla @ $elem")
+  }
+
+
+  def numberOfAstroidsInView(coordinate: Coordinate, astroidLocations: List[Location]): Int = {
+    val allPaths = pathsForCoordinate(coordinate, astroidLocations)
+    println(s"C: $coordinate -  Paths: $allPaths")
+    allPaths.map { _.pathParameters }.distinct.size // just compute distinct directional paths
+  }
+
+  def pathsForCoordinate(coordinate: Coordinate, astroidLocations: List[Location]): List[Path] = {
+    val allMinusSelf = astroidLocations.filterNot(_.coordinate == coordinate)
+    allMinusSelf.map {l => calculatePath(coordinate, l.coordinate)}
+  }
+
+
   def calculatePath(position: Coordinate, target: Coordinate): Path = {
-    val path = if (position.x == target.x) {
-      val direction = (target.y - position.y).sign
-      Path(position.x, Double.PositiveInfinity, direction, (position.y.to(target.y, (target.y - position.y).sign)).map { y => Coordinate(position.x, y)})
+    val distance = math.sqrt(math.pow(position.x - target.x, 2) + math.pow(position.y - target.y, 2))
+    val angle = (math.atan2(position.y - target.y, target.x - position.x) * 180 / math.Pi)
+    val correctedAngle = if (angle <= 90d) angle + 360 else angle
+    val pathParameters = if (position.x == target.x) {
+      val direction = (position.y - target.y).sign
+      PathParameters(Double.PositiveInfinity, position.x, direction, correctedAngle)
     } else {
       val a = (position.y - target.y).toDouble / (position.x - target.x)
       val b = position.y - (a * position.x)
-      val p = position.x.to(target.x, (target.x - position.x).sign).flatMap { x =>
-        val y = (a * x) + b
-        if (y == math.rint(y)) {
-          Some(Coordinate(x, y.toInt))
-        }else {
-          None
-        }
-      }
       val direction = (target.x - position.x).sign
-      Path(a, b, direction, p)
+      PathParameters(a, b, direction, correctedAngle)
     }
-    path.copy(path = (path.path.filterNot(_ == position) :+ target).distinct)
+    Path(pathParameters, target, distance)
   }
 }
