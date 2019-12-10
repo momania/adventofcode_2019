@@ -67,7 +67,7 @@ object IntComputer {
       val y = getParameter(1)
       println(s"X: $x - Y: $y")
       val value = op(x, y)
-      updateAddress(address, value, 0)
+      updateAddress(address, value, modes.drop(2).headOption.getOrElse(0))
     }
 
     @inline def nextIndexOperation(op: Int => Boolean) = {
@@ -76,7 +76,7 @@ object IntComputer {
 
     def updateAddress(address: Int, value: Long, mode: Int): List[(Int, Long)] = {
       val realAddress = mode match {
-        case 2 => address + progress.relativeBase
+        case 2 => progress.relativeBase + address
         case _ => address
       }
       println(s"Updating $realAddress with $value")

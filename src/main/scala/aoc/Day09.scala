@@ -26,4 +26,10 @@ object Day09 extends App {
   val testMode = IntComputer.runOpCode(IntComputerProgress(sourceCode, List(1)))
   println(s"Test mode key: ${testMode}")
   println(s"Test mode key: ${testMode.output}")
+
+  val boostMode = IntComputer.runOpCode(IntComputerProgress(sourceCode, List(2)))
+  println(s"Boost mode key: ${boostMode}")
+  println(s"Boost mode key: ${boostMode.output}")
+
+
 }
