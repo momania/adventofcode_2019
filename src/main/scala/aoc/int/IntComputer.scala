@@ -49,10 +49,7 @@ object IntComputer {
     println(s"Index: ${progress.index} - instruction: $instruction - modes: $modes")
 
     @inline def getPositionValueAt(i: Int) = getAddressValue(getAddressValue(i).toInt)
-    @inline def getRelativeValueAt(i: Int) = {
-      println(s"Getting relative value at $i - address value: ${getAddressValue(i).toInt} - base: ${progress.relativeBase}")
-      getAddressValue(progress.relativeBase + getAddressValue(i).toInt)
-    }
+    @inline def getRelativeValueAt(i: Int) = getAddressValue(progress.relativeBase + getAddressValue(i).toInt)
     @inline def getValue(i: Int, mode: Int) = mode match {
       case 0 => getPositionValueAt(i)
       case 1 => getAddressValue(i)
@@ -63,10 +60,7 @@ object IntComputer {
 
     @inline def xyOperation(op: (Long, Long) => Long): List[(Int, Long)] = {
       val address = getAddressValue(progress.index + 3).toInt
-      val x = getParameter(0)
-      val y = getParameter(1)
-      println(s"X: $x - Y: $y")
-      val value = op(x, y)
+      val value = op(getParameter(0), getParameter(1))
       updateAddress(address, value, modes.drop(2).headOption.getOrElse(0))
     }
 
@@ -79,7 +73,6 @@ object IntComputer {
         case 2 => progress.relativeBase + address
         case _ => address
       }
-      println(s"Updating $realAddress with $value")
       progress.code.filterNot(_._1 == realAddress) :+ realAddress -> value
     }
 
@@ -89,18 +82,12 @@ object IntComputer {
       case 2 => progress.copy(state = IntComputerState.Running, index = progress.index + 4, code = xyOperation(_ * _))
       case 3 if progress.input.isEmpty => progress.copy(state = IntComputerState.AwaitingInput)
       case 3 => progress.copy(state = IntComputerState.Running, index = progress.index + 2, code = updateAddress(getAddressValue(progress.index + 1).toInt, progress.input.head, modes.headOption.getOrElse(0)), input = progress.input.tail)
-      case 4 =>
-        val addedOuput = getParameter(0)
-        println(s"Adding output $addedOuput")
-        progress.copy(state = IntComputerState.Running, index = progress.index + 2, output = addedOuput :: progress.output)
+      case 4 => progress.copy(state = IntComputerState.Running, index = progress.index + 2, output = getParameter(0) :: progress.output)
       case 5 => progress.copy(state = IntComputerState.Running, index = nextIndexOperation(_ != 0))
       case 6 => progress.copy(state = IntComputerState.Running, index = nextIndexOperation(_ == 0))
       case 7 => progress.copy(state = IntComputerState.Running, index = progress.index + 4, code = xyOperation(_ < _))
       case 8 => progress.copy(state = IntComputerState.Running, index = progress.index + 4, code = xyOperation(_ == _))
-      case 9 =>
-        val adjustment = getParameter(0)
-        println(s"Adjusting relative base by $adjustment - current base: ${progress.relativeBase}")
-        progress.copy(state = IntComputerState.Running, index = progress.index + 2, relativeBase = progress.relativeBase + adjustment.toInt)
+      case 9 => progress.copy(state = IntComputerState.Running, index = progress.index + 2, relativeBase = progress.relativeBase + getParameter(0).toInt)
     }
 
     updatedProgress.state match {
