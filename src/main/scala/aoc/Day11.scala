@@ -79,6 +79,22 @@ object Day11 extends App {
     }
   }
 
-  val path = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Map.empty)
-  println(s"Painted at least once: ${path.size}")
+  val paintedGrid = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Map.empty)
+  println(s"Painted at least once: ${paintedGrid.size}")
+
+  val paintedGrid2 = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Map(Coordinate(0,0) -> Color.White))
+  println(s"Painted grid 2: $paintedGrid2")
+  val keys = paintedGrid2.keySet
+  val allX = keys.map(_.x)
+  val allY = keys.map(_.y)
+
+  for (y <- allY.min to allY.max) {
+    for {x <- allX.min to allX.max} {
+      paintedGrid2.getOrElse(Coordinate(x, y), Color.Black) match {
+        case Color.Black => print('.')
+        case Color.White => print('#')
+      }
+    }
+    println()
+  }
 }
