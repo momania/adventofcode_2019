@@ -11,7 +11,7 @@ object Day02 extends App {
   val sourceCode = source.getLines().mkString.split(',').map(_.toLong).toList
 
   def intComputer(x: Long, y: Long, code: List[Long] = sourceCode): Int = {
-    val result = IntComputer.runOpCode(IntComputerProgress(code.updated(1, x).updated(2, y)))
+    val result = IntComputer.runComputer(IntComputerProgress(code.updated(1, x).updated(2, y)))
     result.code.find(_._1 == 0).get._2.toInt
   }
 

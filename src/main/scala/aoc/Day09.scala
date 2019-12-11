@@ -23,11 +23,11 @@ object Day09 extends App {
 //  val testResult3 = IntComputer.runOpCode(IntComputerProgress(testCode3))
 //  println(s"Test result3: ${testResult3.output} - equals large number: ${testResult3.output.head == testCode3.tail.head}")
 
-  val testMode = IntComputer.runOpCode(IntComputerProgress(sourceCode, List(1)))
+  val testMode = IntComputer.runComputer(IntComputerProgress(sourceCode, List(1)))
   println(s"Test mode key: ${testMode}")
   println(s"Test mode key: ${testMode.output}")
 
-  val boostMode = IntComputer.runOpCode(IntComputerProgress(sourceCode, List(2)))
+  val boostMode = IntComputer.runComputer(IntComputerProgress(sourceCode, List(2)))
   println(s"Boost mode key: ${boostMode}")
   println(s"Boost mode key: ${boostMode.output}")
 

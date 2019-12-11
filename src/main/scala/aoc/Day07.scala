@@ -20,7 +20,7 @@ object Day07 extends App {
     phases.foldLeft(0L) { case (input, phase) =>
       println(s"Phase: $phase - Input: $input")
       val startProgress = IntComputerProgress(code, List(phase, input))
-      IntComputer.runOpCode(startProgress).output.head
+      IntComputer.runComputer(startProgress).output.head
     }
   }
 
@@ -37,8 +37,8 @@ object Day07 extends App {
       todo match {
         case head :: rest =>
           val updatedHead = head.copy(input = head.input :+ signal)
-          val updatedDone = IntComputer.runOpCode(updatedHead)
-          runInternal(updatedDone.output.head, rest, done :+ updatedDone)
+          val updatedDone = IntComputer.runComputer(updatedHead)
+          runInternal(updatedDone.output.last, rest, done :+ updatedDone)
         case Nil =>
           done
 
@@ -49,14 +49,14 @@ object Day07 extends App {
       if (amps.exists(_.state == IntComputerState.Halted)) {
         amps
       } else {
-        val signal = amps.lastOption.flatMap(_.output.headOption).getOrElse(0L)
+        val signal = amps.lastOption.flatMap(_.output.lastOption).getOrElse(0L)
         runUntilHalted(runInternal(signal, amps, Nil))
       }
     }
 
     val round1 = runUntilHalted(amps)
     println(s"Progress round1: $round1")
-    round1.last.output.head
+    round1.head.output.head
   }
 
   val phases2 = (5 to 9).toList
