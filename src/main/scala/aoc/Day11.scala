@@ -64,12 +64,11 @@ object Day11 extends App {
     case Direction.Right  => coordinate.copy(x = coordinate.x + 1)
   }
 
-  @tailrec def collectPath(ship: Ship, progress: IntComputerProgress, collected: List[PaintedLocation]): List[PaintedLocation] = {
-    val inputColor = collected.find(_.coordinate == ship.coordinate).map(_.color).getOrElse(Color.Black)
+  @tailrec def collectPath(ship: Ship, progress: IntComputerProgress, collected: Map[Coordinate, Color]): Map[Coordinate, Color] = {
+    val inputColor = collected.getOrElse(ship.coordinate, Color.Black)
     val updatedProgress = IntComputer.runComputer(progress.copy(input = List(inputColor.code)))
     val colorCode :: directionCode :: Nil = updatedProgress.output
-//    println(s"Code: $colorCode - directionCOde: $directionCOde")
-    val updatedCollected = collected :+ PaintedLocation(ship.coordinate, Color(colorCode.toInt))
+    val updatedCollected = collected + (ship.coordinate -> Color(colorCode.toInt))
     if (updatedProgress.state != IntComputerState.Halted) {
       val updatedDirection = ship.direction.adjustDirection(directionCode.toInt)
       val updatedCoordinate = moveToNextCoordinate(ship.coordinate, updatedDirection)
@@ -80,11 +79,6 @@ object Day11 extends App {
     }
   }
 
-  val path = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Nil)
-  for (p <- path) {
-    println(s"P: $p")
-  }
-
-  val paintedAtLeastOnce = path.map(_.coordinate).distinct.size
-  println(s"Painted at least once: $paintedAtLeastOnce")
+  val path = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Map.empty)
+  println(s"Painted at least once: ${path.size}")
 }

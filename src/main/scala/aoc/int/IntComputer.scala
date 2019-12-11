@@ -40,7 +40,11 @@ object IntComputer {
 
   def runComputer(progress: IntComputerProgress): IntComputerProgress = {
     // reset state and output
-    runOpCode(progress.copy(state = IntComputerState.Running, output = Nil))
+    val resetState = progress.copy(state = IntComputerState.Running, output = Nil)
+//    println(s"Running computer - input ${resetState.input}")
+    val result = runOpCode(resetState)
+//    println(s"Finished running computer - output: ${result.output}")
+    result
   }
 
   @tailrec private def runOpCode(progress: IntComputerProgress): IntComputerProgress = {
@@ -51,7 +55,7 @@ object IntComputer {
     }
 
     val (instruction, modes) = extractInstructionAndModes(getAddressValue(progress.index))
-    println(s"Index: ${progress.index} - instruction: $instruction - modes: $modes")
+//    println(s"Index: ${progress.index} - instruction: $instruction - modes: $modes")
 
     @inline def getPositionValueAt(i: Int) = getAddressValue(getAddressValue(i).toInt)
     @inline def getRelativeValueAt(i: Int) = getAddressValue(progress.relativeBase + getAddressValue(i).toInt)
