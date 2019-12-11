@@ -23,8 +23,7 @@ object Day10 extends App {3
 
   case class Coordinate(x: Int, y: Int)
   case class Location(coordinate: Coordinate, hasAstroid: Boolean)
-  case class PathParameters(a: Double, b: Double, direction: Int, angle: Double)
-  case class Path(pathParameters: PathParameters, target: Coordinate, distance: Double)
+  case class Path(angle: Double, target: Coordinate, distance: Double)
 
   val grid = sourceCode.zipWithIndex.flatMap { case (line, y) =>
     line.zipWithIndex.map { case (pos, x) => Location(Coordinate(x, y), (pos == '#')) }
@@ -42,10 +41,10 @@ object Day10 extends App {3
 
   val pathsForBestPoint = pathsForCoordinate(bestPoint._1.coordinate, astroidLocations)
   println(s"Paths for best: $pathsForBestPoint")
-  val grouped = pathsForBestPoint.groupBy(_.pathParameters).toList
+  val grouped = pathsForBestPoint.groupBy(_.angle).toList
 
   println(s"G: $grouped")
-  val sorted = grouped.sortBy(_._1.angle).reverse
+  val sorted = grouped.sortBy(_._1).reverse
   println(s"Sorted: ${sorted}")
 
 
@@ -72,8 +71,8 @@ object Day10 extends App {3
 
   def numberOfAstroidsInView(coordinate: Coordinate, astroidLocations: List[Location]): Int = {
     val allPaths = pathsForCoordinate(coordinate, astroidLocations)
-    println(s"C: $coordinate -  Paths: $allPaths")
-    allPaths.map { _.pathParameters }.distinct.size // just compute distinct directional paths
+//    println(s"C: $coordinate -  Paths: $allPaths")
+    allPaths.map { _.angle }.distinct.size // just compute distinct directional paths
   }
 
   def pathsForCoordinate(coordinate: Coordinate, astroidLocations: List[Location]): List[Path] = {
@@ -86,15 +85,6 @@ object Day10 extends App {3
     val distance = math.sqrt(math.pow(position.x - target.x, 2) + math.pow(position.y - target.y, 2))
     val angle = (math.atan2(position.y - target.y, target.x - position.x) * 180 / math.Pi)
     val correctedAngle = if (angle <= 90d) angle + 360 else angle
-    val pathParameters = if (position.x == target.x) {
-      val direction = (position.y - target.y).sign
-      PathParameters(Double.PositiveInfinity, position.x, direction, correctedAngle)
-    } else {
-      val a = (position.y - target.y).toDouble / (position.x - target.x)
-      val b = position.y - (a * position.x)
-      val direction = (target.x - position.x).sign
-      PathParameters(a, b, direction, correctedAngle)
-    }
-    Path(pathParameters, target, distance)
+    Path(correctedAngle, target, distance)
   }
 }
