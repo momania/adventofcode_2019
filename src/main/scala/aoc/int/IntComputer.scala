@@ -51,7 +51,7 @@ object IntComputer {
     }
 
     val (instruction, modes) = extractInstructionAndModes(getAddressValue(progress.index))
-//    println(s"Index: ${progress.index} - instruction: $instruction - modes: $modes")
+    println(s"Index: ${progress.index} - instruction: $instruction - modes: $modes")
 
     @inline def getPositionValueAt(i: Int) = getAddressValue(getAddressValue(i).toInt)
     @inline def getRelativeValueAt(i: Int) = getAddressValue(progress.relativeBase + getAddressValue(i).toInt)

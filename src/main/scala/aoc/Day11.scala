@@ -1,0 +1,90 @@
+package aoc
+
+import aoc.int.{IntComputer, IntComputerProgress, IntComputerState}
+
+import scala.annotation.tailrec
+import scala.io.Source
+
+object Day11 extends App {
+
+  val source = Source.fromFile("input/day11.input")
+  val sourceCode = source.getLines().mkString.split(',').map(_.toLong).toList
+
+  sealed trait Direction {
+    def adjustDirection(code: Int): Direction
+  }
+  object Direction {
+    case object Up extends Direction {
+      override def adjustDirection(code: Int): Direction = code match {
+        case 0 => Left
+        case 1 => Right
+      }
+    }
+    case object Down extends Direction {
+      override def adjustDirection(code: Int): Direction = code match {
+        case 0 => Right
+        case 1 => Left
+      }
+    }
+    case object Left extends Direction {
+      override def adjustDirection(code: Int): Direction = code match {
+        case 0 => Down
+        case 1 => Up
+      }
+    }
+    case object Right extends Direction {
+      override def adjustDirection(code: Int): Direction = code match {
+        case 0 => Up
+        case 1 => Down
+      }
+    }
+  }
+  sealed trait Color {
+    def code: Int
+  }
+  object Color {
+    case object Black extends Color {
+      lazy val code = 0
+    }
+    case object White extends Color {
+      lazy val code = 1
+    }
+
+    private val all = List(Black, White)
+    def apply(code: Int): Color = all.find(_.code == code).getOrElse(sys.error(s"Unknown color code $code"))
+  }
+  case class Coordinate(x: Int, y: Int)
+  case class Ship(coordinate: Coordinate, direction: Direction)
+  case class PaintedLocation(coordinate: Coordinate, color: Color)
+
+  @inline def moveToNextCoordinate(coordinate: Coordinate, direction: Direction) = direction match {
+    case Direction.Up => coordinate.copy(y = coordinate.y - 1)
+    case Direction.Down => coordinate.copy(y = coordinate.y + 1)
+    case Direction.Left => coordinate.copy(x = coordinate.x - 1)
+    case Direction.Right  => coordinate.copy(x = coordinate.x + 1)
+  }
+
+  @tailrec def collectPath(ship: Ship, progress: IntComputerProgress, collected: List[PaintedLocation]): List[PaintedLocation] = {
+    val inputColor = collected.find(_.coordinate == ship.coordinate).map(_.color).getOrElse(Color.Black)
+    val updatedProgress = IntComputer.runComputer(progress.copy(input = List(inputColor.code)))
+    val colorCode :: directionCode :: Nil = updatedProgress.output
+//    println(s"Code: $colorCode - directionCOde: $directionCOde")
+    val updatedCollected = collected :+ PaintedLocation(ship.coordinate, Color(colorCode.toInt))
+    if (updatedProgress.state != IntComputerState.Halted) {
+      val updatedDirection = ship.direction.adjustDirection(directionCode.toInt)
+      val updatedCoordinate = moveToNextCoordinate(ship.coordinate, updatedDirection)
+      val updatedShip = ship.copy(coordinate = updatedCoordinate, direction = updatedDirection)
+      collectPath(updatedShip, updatedProgress, updatedCollected)
+    } else {
+      updatedCollected
+    }
+  }
+
+  val path = collectPath(Ship(Coordinate(0, 0), Direction.Up), IntComputerProgress(sourceCode), Nil)
+  for (p <- path) {
+    println(s"P: $p")
+  }
+
+  val paintedAtLeastOnce = path.map(_.coordinate).distinct.size
+  println(s"Painted at least once: $paintedAtLeastOnce")
+}
