@@ -5,7 +5,7 @@ import scala.io.Source
 
 object Day12 extends App {
 
-  val source = Source.fromFile("input/day12.test.input")
+  val source = Source.fromFile("input/day12.input")
   val sourceCode = source.getLines().toList
 
   val names = List("Io", "Europa", "Ganymede", "Callisto")
@@ -49,26 +49,27 @@ object Day12 extends App {
       val gravityUpdatedMoons = combinations.foldLeft(moons) { case (moons, (left, right)) =>
         val gravityDiff = computeGravity(left.position, right.position)
         val (current, rest) =  moons.partition(m => m.name == left.name || m.name == right.name)
-        val updatedLeft = current.find(_.name == left.name).map(m => applyGravity(m, gravityDiff)).toList
-        val updatedRight = current.find(_.name == right.name).map(m => applyGravity(m, inverseMeasure(gravityDiff))).toList
+        val updatedLeft = current.find(_.name == left.name).map(m => applyGravity(m, inverseMeasure(gravityDiff))).toList
+        val updatedRight = current.find(_.name == right.name).map(m => applyGravity(m, gravityDiff)).toList
         updatedLeft ::: updatedRight ::: rest
       }
       val velocityUpdatedMoons = gravityUpdatedMoons.map(applyVelocity)
+      println(s"Updated moons: ${velocityUpdatedMoons.sortBy(_.name)}")
       simulation(steps - 1, velocityUpdatedMoons)
     } else {
       moons
     }
   }
 
-  println(s"Moons: $moons")
-  val simulatedMoons = simulation(10, moons)
+  println(s"Moons: ${moons.sortBy(_.name)}")
+  val simulatedMoons = simulation(1000, moons)
   val totalEnergy = computeTotalEnergy(simulatedMoons)
-  println(s"Moons: $simulatedMoons")
+  println(s"Moons: ${simulatedMoons.sortBy(_.name)}")
   println(s"Total energy: $totalEnergy")
 
   def computeTotalEnergy(moons: List[Moon]): Long = {
     moons.map { moon =>
-      computeMeasureEnergy(moon.position) + computeMeasureEnergy(moon.velocity)
+      computeMeasureEnergy(moon.position) * computeMeasureEnergy(moon.velocity)
     }.sum
   }
 
