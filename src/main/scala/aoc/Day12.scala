@@ -13,12 +13,6 @@ object Day12 extends App {
   case class Measure(x: Int, y: Int, z: Int)
   case class Moon(name: String, position: Measure, velocity: Measure)
 
-  val moons = sourceCode.zipWithIndex.map{ case (line, index) =>
-    val elems = line.tail.dropRight(1)
-    val x :: y :: z :: Nil = elems.split(',').map { e => e.split('=').last.toInt}.toList
-    Moon(names(index), Measure(x, y, z), Measure(0, 0, 0))
-  }
-
   def computeGravity(left: Measure, right: Measure): Measure = {
     val x = left.x.compareTo(right.x)
     val y = left.y.compareTo(right.y)
@@ -43,29 +37,25 @@ object Day12 extends App {
     moon.copy(position = updatedPosition)
   }
 
-  @tailrec def simulation(steps: Int, moons: List[Moon]): List[Moon] = {
+  def runSimulation(moons: List[Moon]): List[Moon] = {
+    val combinations = moons.combinations(2).map{ case left :: right :: Nil => left -> right}
+    val gravityUpdatedMoons = combinations.foldLeft(moons) { case (moons, (left, right)) =>
+      val gravityDiff = computeGravity(left.position, right.position)
+      val (current, rest) =  moons.partition(m => m.name == left.name || m.name == right.name)
+      val updatedLeft = current.find(_.name == left.name).map(m => applyGravity(m, inverseMeasure(gravityDiff))).toList
+      val updatedRight = current.find(_.name == right.name).map(m => applyGravity(m, gravityDiff)).toList
+      updatedLeft ::: updatedRight ::: rest
+    }
+    gravityUpdatedMoons.map(applyVelocity)
+  }
+
+  @tailrec def stepSimulation(steps: Int, moons: List[Moon]): List[Moon] = {
     if (steps > 0) {
-      val combinations = moons.combinations(2).map{ case left :: right :: Nil => left -> right}
-      val gravityUpdatedMoons = combinations.foldLeft(moons) { case (moons, (left, right)) =>
-        val gravityDiff = computeGravity(left.position, right.position)
-        val (current, rest) =  moons.partition(m => m.name == left.name || m.name == right.name)
-        val updatedLeft = current.find(_.name == left.name).map(m => applyGravity(m, inverseMeasure(gravityDiff))).toList
-        val updatedRight = current.find(_.name == right.name).map(m => applyGravity(m, gravityDiff)).toList
-        updatedLeft ::: updatedRight ::: rest
-      }
-      val velocityUpdatedMoons = gravityUpdatedMoons.map(applyVelocity)
-      println(s"Updated moons: ${velocityUpdatedMoons.sortBy(_.name)}")
-      simulation(steps - 1, velocityUpdatedMoons)
+      stepSimulation(steps - 1, runSimulation(moons))
     } else {
       moons
     }
   }
-
-  println(s"Moons: ${moons.sortBy(_.name)}")
-  val simulatedMoons = simulation(1000, moons)
-  val totalEnergy = computeTotalEnergy(simulatedMoons)
-  println(s"Moons: ${simulatedMoons.sortBy(_.name)}")
-  println(s"Total energy: $totalEnergy")
 
   def computeTotalEnergy(moons: List[Moon]): Long = {
     moons.map { moon =>
@@ -76,4 +66,23 @@ object Day12 extends App {
   def computeMeasureEnergy(measure: Measure): Long = {
     math.abs(measure.x) + math.abs(measure.y) + math.abs(measure.z)
   }
+
+  val moons = sourceCode.zipWithIndex.map{ case (line, index) =>
+    val elems = line.tail.dropRight(1)
+    val x :: y :: z :: Nil = elems.split(',').map { e => e.split('=').last.toInt}.toList
+    Moon(names(index), Measure(x, y, z), Measure(0, 0, 0))
+  }
+
+  println(s"Initial Moons:")
+  for (m <- moons.sortBy(_.name)) {
+    println(m)
+  }
+  val steps = 1000
+  val simulatedMoons = stepSimulation(steps, moons)
+  val totalEnergy = computeTotalEnergy(simulatedMoons)
+  println(s"Moons after $steps steps:")
+  for (m <- simulatedMoons.sortBy(_.name)) {
+    println(m)
+  }
+  println(s"Total energy: $totalEnergy")
 }
