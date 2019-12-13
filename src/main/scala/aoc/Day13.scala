@@ -1,4 +1,6 @@
-package aoc.int
+package aoc
+
+import aoc.int.{IntComputer, IntComputerProgress}
 
 import scala.annotation.tailrec
 import scala.io.Source
