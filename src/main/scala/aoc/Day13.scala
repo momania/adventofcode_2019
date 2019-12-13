@@ -1,6 +1,6 @@
 package aoc
 
-import aoc.int.{IntComputer, IntComputerProgress}
+import aoc.int.{IntComputer, IntComputerProgress, IntComputerState}
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -12,33 +12,39 @@ object Day13 extends App {
 
   case class Tile(x: Int, y: Int, content: Int)
   case class Cooridinate(x: Int, y: Int)
-  case class GameStatus(score: Int, ball: Cooridinate, paddle: Cooridinate, numberOfBlocks: Int)
-
-  def outputToGameStatus(out: List[Long]): GameStatus = {
-    val tiles = out.sliding(3, 3).toList.map { case x :: y :: content :: Nil => Tile(x.toInt, y.toInt, content.toInt)}
-    val score = tiles.find(t => t.x == -1 && t.y  == 0).map(_.content).getOrElse(0)
-    val ball = tiles.find(_.content == 4).map{ t=> Cooridinate(t.x, t.y)}.getOrElse(Cooridinate(0, 0))
-    val paddle = tiles.find(_.content == 3).map{ t=> Cooridinate(t.x, t.y)}.getOrElse(Cooridinate(0, 0))
-    val numberOfBlocks = tiles.count(_.content == 2)
-    GameStatus(score, ball, paddle, numberOfBlocks)
+  case class GameStatus(score: Int, ball: Cooridinate, paddle: Cooridinate, blocks: Int, gameGrid: Map[Cooridinate, Int])
+  object GameStatus {
+    def empty: GameStatus = GameStatus(0, Cooridinate(0,0), Cooridinate(0,0), 0, Map.empty)
   }
 
-  @tailrec def playGame(progress: IntComputerProgress): GameStatus = {
+  def updateGameStatus(gameStatus: GameStatus, out: List[Long]): GameStatus = {
+    val tiles = out.sliding(3, 3).toList.map { case x :: y :: content :: Nil => Tile(x.toInt, y.toInt, content.toInt)}
+    val updatedGameGrid = tiles.foldLeft(gameStatus.gameGrid){ case (grid, tile) => grid + (Cooridinate(tile.x, tile.y) -> tile.content)}
+    val score = updatedGameGrid.getOrElse(Cooridinate(-1, -0), 0)
+    val ball = updatedGameGrid.find(_._2 == 4).map(_._1).getOrElse(Cooridinate(0, 0))
+    val paddle = updatedGameGrid.find(_._2 == 3).map(_._1).getOrElse(Cooridinate(0, 0))
+    val blocks = updatedGameGrid.count(_._2 == 2)
+    GameStatus(score, ball, paddle, blocks, updatedGameGrid)
+  }
+
+  @tailrec def playGame(gameStatus: GameStatus, progress: IntComputerProgress): GameStatus = {
     val updatedProgress = IntComputer.runComputer(progress)
-    val gameStatus = outputToGameStatus(updatedProgress.output)
-    println(s"Intermediate game status: $gameStatus - computer state: ${updatedProgress.state}")
-    if (gameStatus.numberOfBlocks == 0) {
-      gameStatus
+    val updatedGameStatus = updateGameStatus(gameStatus, updatedProgress.output)
+//    println(s"Intermediate game status: $updatedGameStatus - computer state: ${updatedProgress.state} - Out: ${updatedProgress.output}")
+    if (updatedGameStatus.blocks == 0 || updatedProgress.state == IntComputerState.Halted) {
+      updatedGameStatus
     } else {
-      val joystickMovement = -1L
-      playGame(updatedProgress.copy(input = List(joystickMovement)))
+      val joystickMove = updatedGameStatus.ball.x.compareTo(updatedGameStatus.paddle.x)
+      playGame(updatedGameStatus, updatedProgress.copy(input = List(joystickMove)))
     }
   }
 
   val singleRun = IntComputer.runComputer(IntComputerProgress(sourceCode))
-  val gameStatus = outputToGameStatus(singleRun.output)
-  println(s"Number of block tiles: ${gameStatus.numberOfBlocks}")
+  val gameStatus = updateGameStatus(GameStatus.empty, singleRun.output)
+  println(s"Number of block tiles: ${gameStatus.blocks}")
 
-  val gameResult = playGame(IntComputerProgress(sourceCode.updated(0, 2)))
+  val gameResult = playGame(GameStatus.empty, IntComputerProgress(sourceCode.updated(0, 2)))
   println(s"Game result: $gameResult")
+  println(s"Game blocks: ${gameResult.blocks}")
+  println(s"Game score: ${gameResult.score}")
 }
