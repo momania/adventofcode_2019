@@ -53,7 +53,7 @@ object Day13 extends App {
   @tailrec def playGame(gameStatus: GameStatus, progress: IntComputerProgress): GameStatus = {
     val updatedProgress = IntComputer.runComputer(progress)
     val updatedGameStatus = updateGameStatus(gameStatus, updatedProgress.output)
-    ouputGameStatus(updatedGameStatus)
+//    ouputGameStatus(updatedGameStatus)
 //    println(s"Intermediate game status: $updatedGameStatus - computer state: ${updatedProgress.state} - Out: ${updatedProgress.output}")
     if (updatedGameStatus.blocks == 0 || updatedProgress.state == IntComputerState.Halted) {
       updatedGameStatus
