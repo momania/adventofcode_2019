@@ -11,16 +11,16 @@ object IntComputerState {
 object IntComputerProgress {
 
   def apply(code: List[Long]): IntComputerProgress = {
-    IntComputerProgress(IntComputerState.Running, 0, code, Nil, Nil, 0)
+    IntComputerProgress(IntComputerState.Running, 0, code.toIndexedSeq, Nil, Nil, 0)
   }
   def apply(code: List[Long], input: List[Long]): IntComputerProgress = {
-    IntComputerProgress(IntComputerState.Running, 0, code, input, Nil, 0)
+    IntComputerProgress(IntComputerState.Running, 0, code.toIndexedSeq, input, Nil, 0)
   }
 }
 
 case class IntComputerProgress(state: IntComputerState,
                                index: Int,
-                               code: List[Long],
+                               code: IndexedSeq[Long],
                                input: List[Long],
                                output: List[Long],
                                relativeBase: Int)
@@ -64,7 +64,7 @@ object IntComputer {
 
     @inline def getParameter(i: Int, defaultMode: Int = 0 ) = getValue(progress.index + 1 + i, modes.drop(i).headOption.getOrElse(defaultMode))
 
-    @inline def xyOperation(op: (Long, Long) => Long): List[Long] = {
+    @inline def xyOperation(op: (Long, Long) => Long): IndexedSeq[Long] = {
       val address = getAddressValue(progress.index + 3).toInt
       val value = op(getParameter(0), getParameter(1))
       updateAddress(address, value, modes.drop(2).headOption.getOrElse(0))
@@ -74,16 +74,16 @@ object IntComputer {
       if (op(getParameter(0).toInt)) getParameter(1).toInt else progress.index + 3
     }
 
-    def updateAddress(address: Int, value: Long, mode: Int): List[Long] = {
+    def updateAddress(address: Int, value: Long, mode: Int): IndexedSeq[Long] = {
       val realAddress = mode match {
         case 2 => progress.relativeBase + address
         case _ => address
       }
       if (realAddress >= progress.code.size) {
-        progress.code.padTo(realAddress + 1, 0L)
+        progress.code.padTo(realAddress + 1, 0L).updated(realAddress, value)
       } else {
-        progress.code
-      }.updated(realAddress, value)
+        progress.code.updated(realAddress, value)
+      }
     }
 
     val updatedProgress = instruction match {
