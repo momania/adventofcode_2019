@@ -10,20 +10,17 @@ object IntComputerState {
 }
 object IntComputerProgress {
 
-  private def simpleCodeToAddressedCode(code: List[Long]): List[(Int, Long)] = {
-    code.zipWithIndex.map { case (c, i) => i -> c}
-  }
   def apply(code: List[Long]): IntComputerProgress = {
-    IntComputerProgress(IntComputerState.Running, 0, simpleCodeToAddressedCode(code), Nil, Nil, 0)
+    IntComputerProgress(IntComputerState.Running, 0, code, Nil, Nil, 0)
   }
   def apply(code: List[Long], input: List[Long]): IntComputerProgress = {
-    IntComputerProgress(IntComputerState.Running, 0, simpleCodeToAddressedCode(code), input, Nil, 0)
+    IntComputerProgress(IntComputerState.Running, 0, code, input, Nil, 0)
   }
 }
 
 case class IntComputerProgress(state: IntComputerState,
                                index: Int,
-                               code: List[(Int, Long)],
+                               code: List[Long],
                                input: List[Long],
                                output: List[Long],
                                relativeBase: Int)
@@ -51,7 +48,7 @@ object IntComputer {
 
     @inline def getAddressValue(i: Int) = {
       if (i < 0) sys.error(s"Invalid index $i")
-      progress.code.find(_._1 == i).map(_._2).getOrElse(0L)
+      if (i >= progress.code.size) { 0L } else progress.code(i)
     }
 
     val (instruction, modes) = extractInstructionAndModes(getAddressValue(progress.index))
@@ -67,7 +64,7 @@ object IntComputer {
 
     @inline def getParameter(i: Int, defaultMode: Int = 0 ) = getValue(progress.index + 1 + i, modes.drop(i).headOption.getOrElse(defaultMode))
 
-    @inline def xyOperation(op: (Long, Long) => Long): List[(Int, Long)] = {
+    @inline def xyOperation(op: (Long, Long) => Long): List[Long] = {
       val address = getAddressValue(progress.index + 3).toInt
       val value = op(getParameter(0), getParameter(1))
       updateAddress(address, value, modes.drop(2).headOption.getOrElse(0))
@@ -77,12 +74,16 @@ object IntComputer {
       if (op(getParameter(0).toInt)) getParameter(1).toInt else progress.index + 3
     }
 
-    def updateAddress(address: Int, value: Long, mode: Int): List[(Int, Long)] = {
+    def updateAddress(address: Int, value: Long, mode: Int): List[Long] = {
       val realAddress = mode match {
         case 2 => progress.relativeBase + address
         case _ => address
       }
-      progress.code.filterNot(_._1 == realAddress) :+ realAddress -> value
+      if (realAddress >= progress.code.size) {
+        progress.code.padTo(realAddress + 1, 0L)
+      } else {
+        progress.code
+      }.updated(realAddress, value)
     }
 
     val updatedProgress = instruction match {

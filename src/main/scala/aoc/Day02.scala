@@ -12,7 +12,7 @@ object Day02 extends App {
 
   def intComputer(x: Long, y: Long, code: List[Long] = sourceCode): Int = {
     val result = IntComputer.runComputer(IntComputerProgress(code.updated(1, x).updated(2, y)))
-    result.code.find(_._1 == 0).get._2.toInt
+    result.code.head.toInt
   }
 
   println(s"Code: ${intComputer(12, 2)}")
