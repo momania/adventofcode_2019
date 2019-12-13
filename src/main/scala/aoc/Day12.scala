@@ -1,11 +1,13 @@
 package aoc
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.io.Source
 
 object Day12 extends App {
 
-  val source = Source.fromFile("input/day12.test2.input")
+  val source = Source.fromFile("input/day12.input")
   val sourceCode = source.getLines().toList
 
   val names = List("Io", "Europa", "Ganymede", "Callisto")
@@ -67,20 +69,18 @@ object Day12 extends App {
     math.abs(measure.x) + math.abs(measure.y) + math.abs(measure.z)
   }
 
-  @tailrec def stepsUntilZeroVelocity(moons: List[Moon], stepsTaken: Int): Int = {
+  @tailrec def stepsUntilSecondObservation(moons: List[Moon], observed: List[List[Int]], extractPosition: Moon => Int, extracVelocity: Moon => Int): Long = {
     val updatedMoons = runSimulation(moons)
-    val updatedStepsTaken = stepsTaken + 1
-    if (updatedStepsTaken % 1000000 == 0) {
-      println(s"Steps taken so far: $updatedStepsTaken")
-      println("Moons:")
-      for (m <- moons.sortBy(_.name)) {
+    val addingObserved = updatedMoons.map(extractPosition) ::: updatedMoons.map(extracVelocity)
+//    val velocity = updatedMoons.map(extracVelocity)
+    if (observed.contains(addingObserved)) {
+      println("Found second observation:")
+      for (m <- updatedMoons) {
         println(m)
       }
-    }
-    if (updatedMoons.forall(m => m.velocity.x == 0 && m.velocity.y == 0 && m.velocity.z == 0)) {
-      updatedStepsTaken
+      observed.size
     } else {
-      stepsUntilZeroVelocity(updatedMoons, updatedStepsTaken)
+      stepsUntilSecondObservation(updatedMoons, observed :+ addingObserved, extractPosition, extracVelocity)
     }
   }
 
@@ -95,6 +95,7 @@ object Day12 extends App {
   for (m <- moons.sortBy(_.name)) {
     println(m)
   }
+
   val steps = 1000
   val simulatedMoons = stepSimulation(steps, moons)
   val totalEnergy = computeTotalEnergy(simulatedMoons)
@@ -104,9 +105,29 @@ object Day12 extends App {
   }
   println(s"Total energy: $totalEnergy")
 
-  val stepsTakenUntilZeroVelocity = stepsUntilZeroVelocity(moons, 0)
-  println(s"Steps taken until 0 velocity: $stepsTakenUntilZeroVelocity")
+  import scala.concurrent.ExecutionContext.Implicits._
 
+  val stepsForX = Future {
+    println("Searching for X")
+    stepsUntilSecondObservation(moons, List.empty, _.position.x, _.velocity.x)
+  }
 
+  val stepsForY = Future {
+    println("Searching for Y")
+    stepsUntilSecondObservation(moons, List.empty, _.position.y, _.velocity.y)
+  }
 
+  val stepsForZ = Future {
+    println("Searching for Z")
+    stepsUntilSecondObservation(moons, List.empty, _.position.z, _.velocity.z)
+  }
+
+  @tailrec def gcd(a: Long,b: Long): Long = {
+    if(b == 0L) a else gcd(b, a%b)
+  }
+
+  val totals = Await.result(Future.sequence(List(stepsForX, stepsForY, stepsForZ)), Duration.Inf)
+  println(s"Steps taken until second observation $totals")
+  val total = totals.reduce { (a, b) => (math.abs(a * b) / gcd(a, b)) }
+  println(s"""Total: $total""")
 }
