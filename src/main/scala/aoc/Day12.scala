@@ -5,7 +5,7 @@ import scala.io.Source
 
 object Day12 extends App {
 
-  val source = Source.fromFile("input/day12.input")
+  val source = Source.fromFile("input/day12.test2.input")
   val sourceCode = source.getLines().toList
 
   val names = List("Io", "Europa", "Ganymede", "Callisto")
@@ -67,6 +67,24 @@ object Day12 extends App {
     math.abs(measure.x) + math.abs(measure.y) + math.abs(measure.z)
   }
 
+  @tailrec def stepsUntilZeroVelocity(moons: List[Moon], stepsTaken: Int): Int = {
+    val updatedMoons = runSimulation(moons)
+    val updatedStepsTaken = stepsTaken + 1
+    if (updatedStepsTaken % 1000000 == 0) {
+      println(s"Steps taken so far: $updatedStepsTaken")
+      println("Moons:")
+      for (m <- moons.sortBy(_.name)) {
+        println(m)
+      }
+    }
+    if (updatedMoons.forall(m => m.velocity.x == 0 && m.velocity.y == 0 && m.velocity.z == 0)) {
+      updatedStepsTaken
+    } else {
+      stepsUntilZeroVelocity(updatedMoons, updatedStepsTaken)
+    }
+  }
+
+
   val moons = sourceCode.zipWithIndex.map{ case (line, index) =>
     val elems = line.tail.dropRight(1)
     val x :: y :: z :: Nil = elems.split(',').map { e => e.split('=').last.toInt}.toList
@@ -85,4 +103,10 @@ object Day12 extends App {
     println(m)
   }
   println(s"Total energy: $totalEnergy")
+
+  val stepsTakenUntilZeroVelocity = stepsUntilZeroVelocity(moons, 0)
+  println(s"Steps taken until 0 velocity: $stepsTakenUntilZeroVelocity")
+
+
+
 }
