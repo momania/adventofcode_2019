@@ -27,9 +27,33 @@ object Day13 extends App {
     GameStatus(score, ball, paddle, blocks, updatedGameGrid)
   }
 
+  def ouputGameStatus(gameStatus: GameStatus): Unit = {
+
+    print("\u001b[2J")
+
+    val keys = gameStatus.gameGrid.keySet
+    val allX = keys.map(_.x)
+    val allY = keys.map(_.y)
+
+    for (y <- 0 to allY.max) {
+      for {x <- 0 to allX.max} {
+        val c = gameStatus.gameGrid.getOrElse(Cooridinate(x, y), 0) match {
+          case 0 => ' '
+          case 1 => '#'
+          case 2 => '■'
+          case 3 => '_'
+          case 4 => 'o'
+        }
+        print(c)
+      }
+      println()
+    }
+  }
+
   @tailrec def playGame(gameStatus: GameStatus, progress: IntComputerProgress): GameStatus = {
     val updatedProgress = IntComputer.runComputer(progress)
     val updatedGameStatus = updateGameStatus(gameStatus, updatedProgress.output)
+    ouputGameStatus(updatedGameStatus)
 //    println(s"Intermediate game status: $updatedGameStatus - computer state: ${updatedProgress.state} - Out: ${updatedProgress.output}")
     if (updatedGameStatus.blocks == 0 || updatedProgress.state == IntComputerState.Halted) {
       updatedGameStatus
@@ -47,4 +71,6 @@ object Day13 extends App {
   println(s"Game result: $gameResult")
   println(s"Game blocks: ${gameResult.blocks}")
   println(s"Game score: ${gameResult.score}")
+
+  ouputGameStatus(gameResult)
 }
