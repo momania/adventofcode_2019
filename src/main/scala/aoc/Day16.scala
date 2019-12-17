@@ -1,4 +1,4 @@
-package aoc.int
+package aoc
 
 import scala.annotation.tailrec
 import scala.io.Source
