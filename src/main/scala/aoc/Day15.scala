@@ -110,6 +110,7 @@ object Day15 extends App {
 
   @tailrec def fillMaze(fillProgresses: List[FillProgress], map: Map[Coordinate, Int], minutes: Int): Int = {
     if (fillProgresses.forall(_.hitDeadEnd)) {
+      ouputGameStatus(Coordinate(0,0), map)
       minutes
     } else {
       val updatedFillProgresses = fillProgresses.flatMap { fillProgress =>
