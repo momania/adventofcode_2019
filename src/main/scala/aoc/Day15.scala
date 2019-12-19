@@ -11,6 +11,21 @@ object Day15 extends App {
   val source = Source.fromFile("input/day15.input")
   val sourceCode = source.getLines().mkString.split(',').map(_.toLong).toList
 
+  sealed trait Direction {
+    def code: Int
+  }
+  object Direction {
+    case object North extends Direction { lazy val code = 1 }
+    case object South extends Direction { lazy val code = 2 }
+    case object West extends Direction { lazy val code = 3 }
+    case object East extends Direction { lazy val code = 4 }
+
+    val all: List[Direction] = List(North, South, East, West)
+    private val allMap = all.map{ d => d.code -> d}.toMap
+
+    def apply(direction: Int): Direction = allMap(direction)
+  }
+
   case class Coordinate(x: Int, y: Int)
 
   def ouputGameStatus(position: Coordinate, map: Map[Coordinate, Int]): Unit = {
@@ -37,53 +52,55 @@ object Day15 extends App {
     }
   }
 
-  def computeNextCoordinate(current: Coordinate, move: Int): Coordinate =  move match {
-    case 1 => current.copy(y = current.y - 1)
-    case 2 => current.copy(y = current.y + 1)
-    case 3 => current.copy(x = current.x - 1)
-    case 4 => current.copy(x = current.x + 1)
+  def computeNextCoordinate(current: Coordinate, direction: Direction): Coordinate =  direction match {
+    case Direction.North => current.copy(y = current.y - 1)
+    case Direction.South => current.copy(y = current.y + 1)
+    case Direction.West => current.copy(x = current.x - 1)
+    case Direction.East => current.copy(x = current.x + 1)
   }
 
-  def computeNextMove(lastMove: Int, position: Coordinate, map: Map[Coordinate, Int]): Int = {
-//    ouputGameStatus(position, map)
-    println(s"Current pos: $position")
-    val allPossibleMoves = List(1, 2, 3, 4).map{ m=> m -> computeNextCoordinate(position, m)}.toMap
-    val forwardMove = allPossibleMoves(lastMove)
+  def computeNextMove(lastDirection: Direction, position: Coordinate, map: Map[Coordinate, Int]): Direction = {
+//    println(s"Current pos: $position")
+    val allPossibleMoves = Direction.all.map{ d => d -> computeNextCoordinate(position, d)}.toMap
+    val forwardMove = allPossibleMoves(lastDirection)
     if (map.contains(forwardMove)) {
       val allButWalls = allPossibleMoves.filterNot(m => map.get(m._2).contains(0))
       val (allBack, allFree) = allButWalls.partition(c => map.contains(c._2))
       if (allFree.nonEmpty) {
-        println(s"Trying to move to ${allFree.head._2}")
+//        println(s"Trying to move to ${allFree.head._2}")
         allFree.head._1 // move to free
       } else {
-        println(s"Moving back to ${allBack.head._2}")
+//        println(s"Moving back to ${allBack.head._2}")
         Random.shuffle(allBack).head._1 // move known
       }
     } else {
-      println(s"Moving forward to ${forwardMove}")
-      lastMove // just move on
+//      println(s"Moving forward to ${forwardMove}")
+      lastDirection // just move on
     }
   }
 
-  @tailrec def findAir(progress: IntComputerProgress, move: Int, position: Coordinate, map: Map[Coordinate, Int]): (Map[Coordinate, Int], Coordinate) = {
-    val nextPosition = computeNextCoordinate(position, move)
-    val updatedProgress = IntComputer.runComputer(progress.copy(input = List(move)))
+  @tailrec def findAir(progress: IntComputerProgress, direction: Direction, position: Coordinate, map: Map[Coordinate, Int], path: List[Coordinate]): (Map[Coordinate, Int], Coordinate) = {
+    val nextPosition = computeNextCoordinate(position, direction)
+    val updatedProgress = IntComputer.runComputer(progress.copy(input = List(direction.code)))
     val moveResult = updatedProgress.output.head.toInt
     val updatedMap = map + (nextPosition -> moveResult)
     moveResult match {
       case 0 => // hit wall, find next move without updating path
-        val nextMove = computeNextMove(move, position, updatedMap)
-        findAir(updatedProgress, nextMove, position, updatedMap)
+        println(s"Stil at $position - path: ${path.length}")
+        val nextMove = computeNextMove(direction, position, updatedMap)
+        findAir(updatedProgress, nextMove, position, updatedMap, path)
       case 1 => // moved, find next move
-        val nextMove = computeNextMove(move, nextPosition, updatedMap)
-        findAir(updatedProgress, nextMove, nextPosition, updatedMap)
+        println(s"Moved to $nextPosition - path: ${path.length}")
+        val updatedPath = if (path.contains(nextPosition)) path.dropWhile(_ != nextPosition) else nextPosition :: path
+        val nextMove = computeNextMove(direction, nextPosition, updatedMap)
+        findAir(updatedProgress, nextMove, nextPosition, updatedMap, updatedPath)
       case 2 => // found the oxygen
+        println(s"Path length: ${(nextPosition :: path).length}")
         (updatedMap, nextPosition)
-
     }
   }
 
-  val (map, position) = findAir(IntComputerProgress(sourceCode), 4, Coordinate(0,0), Map.empty)
+  val (map, position) = findAir(IntComputerProgress(sourceCode), Direction.South, Coordinate(0,0), Map.empty, List.empty)
   ouputGameStatus(Coordinate(0,0), map)
   println(s"Found the oxygen on $position")
 }
