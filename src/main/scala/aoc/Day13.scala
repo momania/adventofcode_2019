@@ -1,6 +1,7 @@
 package aoc
 
 import aoc.int.{IntComputer, IntComputerProgress, IntComputerState}
+import aoc.model.Coordinate
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -11,18 +12,17 @@ object Day13 extends App {
   val sourceCode = source.getLines().mkString.split(',').map(_.toLong).toList
 
   case class Tile(x: Int, y: Int, content: Int)
-  case class Cooridinate(x: Int, y: Int)
-  case class GameStatus(score: Int, ball: Cooridinate, paddle: Cooridinate, blocks: Int, gameGrid: Map[Cooridinate, Int])
+  case class GameStatus(score: Int, ball: Coordinate, paddle: Coordinate, blocks: Int, gameGrid: Map[Coordinate, Int])
   object GameStatus {
-    def empty: GameStatus = GameStatus(0, Cooridinate(0,0), Cooridinate(0,0), 0, Map.empty)
+    def empty: GameStatus = GameStatus(0, Coordinate(0,0), Coordinate(0,0), 0, Map.empty)
   }
 
   def updateGameStatus(gameStatus: GameStatus, out: List[Long]): GameStatus = {
     val tiles = out.sliding(3, 3).toList.map { case x :: y :: content :: Nil => Tile(x.toInt, y.toInt, content.toInt)}
-    val updatedGameGrid = tiles.foldLeft(gameStatus.gameGrid){ case (grid, tile) => grid + (Cooridinate(tile.x, tile.y) -> tile.content)}
-    val score = updatedGameGrid.getOrElse(Cooridinate(-1, -0), 0)
-    val ball = updatedGameGrid.find(_._2 == 4).map(_._1).getOrElse(Cooridinate(0, 0))
-    val paddle = updatedGameGrid.find(_._2 == 3).map(_._1).getOrElse(Cooridinate(0, 0))
+    val updatedGameGrid = tiles.foldLeft(gameStatus.gameGrid){ case (grid, tile) => grid + (Coordinate(tile.x, tile.y) -> tile.content)}
+    val score = updatedGameGrid.getOrElse(Coordinate(-1, -0), 0)
+    val ball = updatedGameGrid.find(_._2 == 4).map(_._1).getOrElse(Coordinate(0, 0))
+    val paddle = updatedGameGrid.find(_._2 == 3).map(_._1).getOrElse(Coordinate(0, 0))
     val blocks = updatedGameGrid.count(_._2 == 2)
     GameStatus(score, ball, paddle, blocks, updatedGameGrid)
   }
@@ -37,7 +37,7 @@ object Day13 extends App {
 
     for (y <- 0 to allY.max) {
       for {x <- 0 to allX.max} {
-        val c = gameStatus.gameGrid.getOrElse(Cooridinate(x, y), 0) match {
+        val c = gameStatus.gameGrid.getOrElse(Coordinate(x, y), 0) match {
           case 0 => ' '
           case 1 => '#'
           case 2 => '■'

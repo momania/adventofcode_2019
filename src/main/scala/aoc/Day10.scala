@@ -1,5 +1,7 @@
 package aoc
 
+import aoc.model.Coordinate
+
 import scala.annotation.tailrec
 import scala.io.Source
 
@@ -21,7 +23,6 @@ object Day10 extends App {
   println(s"Horizontal edges: $horizontalEdges")
   val allEdges = (verticalEdges ++ horizontalEdges).distinct
 
-  case class Coordinate(x: Int, y: Int)
   case class Location(coordinate: Coordinate, hasAstroid: Boolean)
   case class Path(angle: Double, target: Coordinate, distance: Double)
 

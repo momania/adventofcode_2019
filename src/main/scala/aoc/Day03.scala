@@ -1,5 +1,7 @@
 package aoc
 
+import aoc.model.Coordinate
+
 import scala.annotation.tailrec
 import scala.io.Source
 
@@ -8,17 +10,6 @@ object Day03 extends App {
   val source = Source.fromFile("input/day03.input")
   val wireOne :: wireTwo :: Nil =
     source.getLines().toList.map(_.split(',').toList)
-
-  case class Coordinate(x: Int, y: Int) {
-    def up(by: Int) = Coordinate(x + by, y)
-    def down(by: Int) = Coordinate(x - by, y)
-    def right(by: Int) = Coordinate(x, y + by)
-    def left(by: Int) = Coordinate(x, y - by)
-    def distanceTo(other: Coordinate) = math.abs(x - other.x) + math.abs(y - other.y)
-  }
-  object Coordinate {
-    lazy val zero = Coordinate(0, 0)
-  }
 
   //  val wireOne = "R75,D30,R83,U83,L12,D49,R71,U7,L72".split(',').toList
 //  val wireTwo = "U62,R66,U55,R34,D71,R55,D58,R83".split(',').toList

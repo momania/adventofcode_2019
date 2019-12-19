@@ -1,10 +1,10 @@
 package aoc
 
 import aoc.int.{IntComputer, IntComputerProgress}
+import aoc.model.{Coordinate, Direction, Turn}
 
 import scala.annotation.tailrec
 import scala.io.Source
-import scala.util.Random
 
 object Day17 extends App {
 
@@ -15,9 +15,7 @@ object Day17 extends App {
   println(s"Res: ${res.state}")
   println(s"Res: ${res.output}")
 
-  case class Coordinate(x: Int, y: Int)
-
-  def ouputMap(map: Map[Coordinate, Int]): Unit = {
+  def ouputMap(map: Map[Coordinate, Char]): Unit = {
 
     print("\u001b[2J")
 
@@ -27,26 +25,26 @@ object Day17 extends App {
 
     for (y <- allY.min to allY.max) {
       for {x <- allX.min to allX.max} {
-        print(map(Coordinate(x, y)).toChar)
+        print(map(Coordinate(x, y)))
       }
       println()
     }
   }
 
-  def isIntersection(position: Coordinate, map: Map[Coordinate, Int]): Boolean = {
+  def isIntersection(position: Coordinate, map: Map[Coordinate, Char]): Boolean = {
     val neighbors = List(
       position.copy(x = position.x - 1),
       position.copy(x = position.x + 1),
       position.copy(y = position.y - 1),
       position.copy(y = position.y + 1)
     )
-    map(position).toChar == '#' &&
-      neighbors.forall(pos => map.get(pos).exists(_.toChar == '#'))
+    map(position) == '#' &&
+      neighbors.forall(pos => map.get(pos).contains('#'))
   }
 
   // create map
-  val map = res.output.foldLeft((0, 0, Map.empty[Coordinate, Int])){ case ((x, y, map), o) =>
-    if (o == 10) (0, y + 1, map) else (x + 1, y, map + (Coordinate(x, y) -> o.toInt))
+  val map = res.output.foldLeft((0, 0, Map.empty[Coordinate, Char])){ case ((x, y, map), o) =>
+    if (o == 10) (0, y + 1, map) else (x + 1, y, map + (Coordinate(x, y) -> o.toChar))
   }._3
 
   ouputMap(map)
@@ -54,4 +52,38 @@ object Day17 extends App {
   val intersections = map.keySet.filter(pos => isIntersection(pos, map))
   val alignmentParamsSum = intersections.map{pos => pos.x * pos.y}.sum
   println(s"Alignment parameters sum: $alignmentParamsSum")
+
+  def computeTurnAndNewDirection(position: Coordinate, direction: Direction, map: Map[Coordinate, Char]): (Turn, Direction) = {
+    val (left, right) = direction match {
+      case Direction.North => (position.neighbour(Direction.West), position.neighbour(Direction.East))
+      case Direction.South => (position.neighbour(Direction.East), position.neighbour(Direction.West))
+      case Direction.West => (position.neighbour(Direction.South), position.neighbour(Direction.North))
+      case Direction.East => (position.neighbour(Direction.North), position.neighbour(Direction.South))
+    }
+
+    val hasLeft = map.exists(e => e._1 == left && e._2 == '#')
+    val rightTurn = map.exists(e => e._1 == right && e._2 == '#')
+
+    (Turn.Left, Direction.West)
+  }
+
+  def findNextPosition(position: Coordinate, direction: Direction, map: Map[Coordinate, Char]): Coordinate = {
+    position
+  }
+
+  @tailrec def walkPath(position: Coordinate, direction: Direction, map: Map[Coordinate, Char], path: String): String = {
+    // find turn and length to walk
+    val (nextTurn, nextDirection) = computeTurnAndNewDirection(position, direction, map)
+    if (nextTurn == '?') {
+      path
+    } else {
+      val nextPosition = findNextPosition(position, direction, map)
+      val distance = position.distanceTo(nextPosition)
+      val updatedPath = path + nextTurn + distance
+      walkPath(nextPosition, nextDirection, map, updatedPath)
+    }
+  }
+
+  val startPosition = map.find(_._2.toChar == '^').map(_._1).getOrElse(sys.error("Start position not found"))
+  val singlePath = walkPath(startPosition, Direction.North, map, "")
 }

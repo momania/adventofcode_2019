@@ -1,6 +1,7 @@
 package aoc
 
 import aoc.int.{IntComputer, IntComputerProgress, IntComputerState}
+import aoc.model.Coordinate
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -53,7 +54,6 @@ object Day11 extends App {
     private val all = List(Black, White)
     def apply(code: Int): Color = all.find(_.code == code).getOrElse(sys.error(s"Unknown color code $code"))
   }
-  case class Coordinate(x: Int, y: Int)
   case class Ship(coordinate: Coordinate, direction: Direction)
   case class PaintedLocation(coordinate: Coordinate, color: Color)
 

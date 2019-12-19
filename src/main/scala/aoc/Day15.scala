@@ -1,6 +1,7 @@
 package aoc
 
 import aoc.int.{IntComputer, IntComputerProgress}
+import aoc.model.Coordinate
 
 import scala.annotation.tailrec
 import scala.io.Source
@@ -26,7 +27,6 @@ object Day15 extends App {
     def apply(direction: Int): Direction = allMap(direction)
   }
 
-  case class Coordinate(x: Int, y: Int)
   case class FillProgress(progress: IntComputerProgress, position: Coordinate, hitDeadEnd: Boolean = false)
 
   def ouputGameStatus(position: Coordinate, map: Map[Coordinate, Int]): Unit = {
