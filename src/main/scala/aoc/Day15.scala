@@ -27,6 +27,7 @@ object Day15 extends App {
   }
 
   case class Coordinate(x: Int, y: Int)
+  case class FillProgress(progress: IntComputerProgress, position: Coordinate, hitDeadEnd: Boolean = false)
 
   def ouputGameStatus(position: Coordinate, map: Map[Coordinate, Int]): Unit = {
 
@@ -60,26 +61,29 @@ object Day15 extends App {
   }
 
   def computeNextMove(lastDirection: Direction, position: Coordinate, map: Map[Coordinate, Int]): Direction = {
-//    println(s"Current pos: $position")
     val allPossibleMoves = Direction.all.map{ d => d -> computeNextCoordinate(position, d)}.toMap
     val forwardMove = allPossibleMoves(lastDirection)
     if (map.contains(forwardMove)) {
       val allButWalls = allPossibleMoves.filterNot(m => map.get(m._2).contains(0))
       val (allBack, allFree) = allButWalls.partition(c => map.contains(c._2))
       if (allFree.nonEmpty) {
-//        println(s"Trying to move to ${allFree.head._2}")
         allFree.head._1 // move to free
       } else {
-//        println(s"Moving back to ${allBack.head._2}")
         Random.shuffle(allBack).head._1 // move known
       }
     } else {
-//      println(s"Moving forward to ${forwardMove}")
       lastDirection // just move on
     }
   }
 
-  @tailrec def findAir(progress: IntComputerProgress, direction: Direction, position: Coordinate, map: Map[Coordinate, Int], path: List[Coordinate]): (Map[Coordinate, Int], Coordinate) = {
+  def nextFreeMoves(position: Coordinate, map: Map[Coordinate, Int]): List[Direction] = {
+    val allPossibleMoves = Direction.all.map{ d => d -> computeNextCoordinate(position, d)}.toMap
+    val allButWalls = allPossibleMoves.filterNot(m => map.get(m._2).contains(0))
+    val (_, allFree) = allButWalls.partition(c => map.contains(c._2))
+    allFree.keySet.toList
+  }
+
+  @tailrec def findAir(progress: IntComputerProgress, direction: Direction, position: Coordinate, map: Map[Coordinate, Int], path: List[Coordinate]): (IntComputerProgress, Coordinate) = {
     val nextPosition = computeNextCoordinate(position, direction)
     val updatedProgress = IntComputer.runComputer(progress.copy(input = List(direction.code)))
     val moveResult = updatedProgress.output.head.toInt
@@ -95,12 +99,47 @@ object Day15 extends App {
         val nextMove = computeNextMove(direction, nextPosition, updatedMap)
         findAir(updatedProgress, nextMove, nextPosition, updatedMap, updatedPath)
       case 2 => // found the oxygen
+        ouputGameStatus(Coordinate(0,0), updatedMap)
         println(s"Path length: ${(nextPosition :: path).length}")
-        (updatedMap, nextPosition)
+
+        (progress, nextPosition)
     }
   }
 
-  val (map, position) = findAir(IntComputerProgress(sourceCode), Direction.South, Coordinate(0,0), Map.empty, List.empty)
-  ouputGameStatus(Coordinate(0,0), map)
+
+
+  @tailrec def fillMaze(fillProgresses: List[FillProgress], map: Map[Coordinate, Int], minutes: Int): Int = {
+    if (fillProgresses.forall(_.hitDeadEnd)) {
+      minutes
+    } else {
+      val updatedFillProgresses = fillProgresses.flatMap { fillProgress =>
+        val moves = nextFreeMoves(fillProgress.position, map)
+        if (moves.isEmpty) {
+          List((fillProgress.copy(hitDeadEnd = true), map))
+        } else {
+          moves.map { move =>
+            val nextPosition = computeNextCoordinate(fillProgress.position, move)
+            val updatedProgress = IntComputer.runComputer(fillProgress.progress.copy(input = List(move.code)))
+            val moveResult = updatedProgress.output.head.toInt
+            val updatedMap = map + (nextPosition -> moveResult)
+            moveResult match {
+              case 0 => // wall
+                (fillProgress.copy(updatedProgress), updatedMap)
+              case 1 | 2 => // moved
+                (fillProgress.copy(updatedProgress, nextPosition), updatedMap)
+            }
+          }
+        }
+      }
+      val mergedMaps = updatedFillProgresses.map(_._2).reduce(_ ++ _)
+      fillMaze(updatedFillProgresses.map(_._1), mergedMaps, minutes + 1)
+    }
+
+  }
+
+  val (progress, position) = findAir(IntComputerProgress(sourceCode), Direction.South, Coordinate(0,0), Map.empty, List.empty)
   println(s"Found the oxygen on $position")
+
+  val minutes = fillMaze(List(FillProgress(progress, position)), Map(position -> 2), 0)
+  println(s"Air filled in ${minutes} minutes")
 }
