@@ -60,10 +60,11 @@ object Day17 extends App {
       case Direction.West => (position.neighbour(Direction.South), position.neighbour(Direction.North))
       case Direction.East => (position.neighbour(Direction.North), position.neighbour(Direction.South))
     }
+    println(s"Left: $left - Right: $right")
 
-    if (map.exists(e => e._1 == left && e._2 == '#')) {
+    if (map.get(left).contains('#')) {
       Some(Turn.Left)
-    } else if (map.exists(e => e._1 == right && e._2 == '#')) {
+    } else if (map.get(right).contains('#')) {
       Some(Turn.Right)
     } else {
       None
@@ -77,16 +78,18 @@ object Day17 extends App {
 
   @tailrec def findNextPosition(position: Coordinate, direction: Direction, map: Map[Coordinate, Char]): Coordinate = {
     val neighbor = position.neighbour(direction)
-    if (map(neighbor) == '#') findNextPosition(neighbor, direction, map) else position
+    if (map.get(neighbor).contains('#')) findNextPosition(neighbor, direction, map) else position
   }
 
   @tailrec def walkPath(position: Coordinate, direction: Direction, map: Map[Coordinate, Char], path: String): String = {
+    println(s"Walking from $position - direction $direction")
     // find turn and length to walk
     computeTurn(position, direction, map) match {
       case None => path
       case Some(turn) =>
         val nextDirection = direction.adjustDirection(turn)
         val nextPosition = findNextPosition(position, nextDirection, map)
+        println(s"Next position: $nextPosition - direction: $nextDirection")
         val distance = position.distanceTo(nextPosition)
         val updatedPath = path + turnToChar(turn) + distance
         println(s"Path: $updatedPath")
@@ -97,5 +100,5 @@ object Day17 extends App {
   val startPosition = map.find(_._2.toChar == '^').map(_._1).getOrElse(sys.error("Start position not found"))
   val singlePath = walkPath(startPosition, Direction.North, map, "")
 
-  println(s"Path: $singlePath")
+  println(s"Final Path: $singlePath")
 }
